@@ -1,14 +1,19 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Http;
 using MvcMovie.Models;
-using System.Collections.Generic;
-using System;
-using System.Threading.Tasks;
+using System.Reflection;
 
 namespace MvcMovie.Controllers
 {
     public class MoviesController : Controller
     {
-        // GET: Movies/Details/5
+        private static List<Movie> listMovies = new List<Movie>();
+        public async Task<IActionResult> Index()
+        {
+            return View(listMovies);
+
+        }
+
         public async Task<IActionResult> Details(int? id)
         {
             if (id == null)
@@ -16,64 +21,112 @@ namespace MvcMovie.Controllers
                 return NotFound();
             }
 
-            var movie = new Movie
+            //Simulación de creación de un objeto (model)
+            //Mas adelante vamos a ver como usar una base de datos
+            var movie = listMovies.Find(m => m.Id == id);
+
+            if (movie == null)
             {
-                Genre = "Terror",
-                Id = 1,
-                Price = 1,
-                ReleaseDate = DateTime.Now,
-                Title = "La noche del terror"
-            };
+                return NotFound();
+            }
 
             return View(movie);
         }
 
-        // GET: Movies
-        public async Task<IActionResult> Index()
-        {
-            var listMovies = new List<Movie>();
-
-            var movie1 = new Movie
-            {
-                Genre = "Terror",
-                Id = 1,
-                Price = 1,
-                ReleaseDate = DateTime.Now,
-                Title = "La noche del terror"
-            };
-            listMovies.Add(movie1);
-
-            var movie2 = new Movie
-            {
-                Genre = "Terror",
-                Id = 2,
-                Price = 2,
-                ReleaseDate = DateTime.Now,
-                Title = "La noche del terror II"
-            };
-            listMovies.Add(movie2);
-
-            return View(listMovies);
-        }
-
-        // GET: Movies/Create
-        public IActionResult Create()
+        public ActionResult Create()
         {
             return View();
         }
 
-        // POST: Movies/Create
+        // POST: ModelController/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Title,Genre,ReleaseDate,Price")] Movie movie)
+        public ActionResult Create(Movie model)
         {
-            if (ModelState.IsValid)
+            try
             {
-                // Aquí es donde normalmente guardarías la película en la base de datos.
-                // Pero como no tienes base de datos configurada, simplemente redirigimos a Index.
-                return RedirectToAction(nameof(Index));
+                if (ModelState.IsValid)
+                {
+                    // Simplemente asignamos un nuevo id como el siguiente número en la lista
+                    model.Id = listMovies.Count + 1;
+                    listMovies.Add(model);
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "Error al crear la película: " + ex.Message);
+            }
+            return View(model);
+        }
+
+        // GET: ModelController/Edit/5
+        public ActionResult Edit(int id)
+        {
+            var movie = listMovies.Find(m => m.Id == id);
+            if (movie == null)
+            {
+                return NotFound();
             }
             return View(movie);
+        }
+
+        // POST: ModelController/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(int id, Movie model)
+        {
+            try
+            {
+                if (ModelState.IsValid)
+                {
+                    var movieIndex = listMovies.FindIndex(m => m.Id == id);
+                    if (movieIndex == -1)
+                    {
+                        return NotFound();
+                    }
+                    listMovies[movieIndex] = model;
+                    return RedirectToAction(nameof(Index));
+                }
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "Error al editar la película: " + ex.Message);
+            }
+            return View(model);
+        }
+
+        // GET: ModelController/Delete/5
+        public ActionResult Delete(int id)
+        {
+            var movie = listMovies.Find(m => m.Id == id);
+            if (movie == null)
+            {
+                return NotFound();
+            }
+            return View(movie);
+        }
+
+        // POST: ModelController/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Delete(int id, Movie model)
+        {
+            try
+            {
+                var movieIndex = listMovies.FindIndex(m => m.Id == id);
+                if (movieIndex == -1)
+                {
+                    return NotFound();
+                }
+                listMovies.RemoveAt(movieIndex);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                ModelState.AddModelError(string.Empty, "Error al eliminar la película: " + ex.Message);
+            }
+            return View(model);
         }
     }
 }
