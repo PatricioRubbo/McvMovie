@@ -1,7 +1,10 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MvcMovie.Models;
+using System.Collections.Generic;
+using System;
+using System.Threading.Tasks;
 
-namespace McvMovie.Controllers
+namespace MvcMovie.Controllers
 {
     public class MoviesController : Controller
     {
@@ -13,8 +16,6 @@ namespace McvMovie.Controllers
                 return NotFound();
             }
 
-            //Simulación de creación de un objeto (model)
-            //Mas adelante vamos a ver como usar una base de datos
             var movie = new Movie
             {
                 Genre = "Terror",
@@ -24,9 +25,9 @@ namespace McvMovie.Controllers
                 Title = "La noche del terror"
             };
 
-
             return View(movie);
         }
+
         // GET: Movies
         public async Task<IActionResult> Index()
         {
@@ -45,16 +46,34 @@ namespace McvMovie.Controllers
             var movie2 = new Movie
             {
                 Genre = "Terror",
-                Id = 1,
-                Price = 1,
+                Id = 2,
+                Price = 2,
                 ReleaseDate = DateTime.Now,
                 Title = "La noche del terror II"
             };
             listMovies.Add(movie2);
 
             return View(listMovies);
+        }
 
+        // GET: Movies/Create
+        public IActionResult Create()
+        {
+            return View();
+        }
+
+        // POST: Movies/Create
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create([Bind("Id,Title,Genre,ReleaseDate,Price")] Movie movie)
+        {
+            if (ModelState.IsValid)
+            {
+                // Aquí es donde normalmente guardarías la película en la base de datos.
+                // Pero como no tienes base de datos configurada, simplemente redirigimos a Index.
+                return RedirectToAction(nameof(Index));
+            }
+            return View(movie);
         }
     }
-    
 }
